@@ -7,9 +7,6 @@ const crypto = require('crypto');
 
 const { botManager } = require('./services/bot.js')
 
-const { ConfigManager } = require('./core/configManager.js')
-const configManagerService = new ConfigManager();
-
 
 async function init() {
     logger.info("Do you want to restart previous sessions? (if any exist) | Y/N");
@@ -18,7 +15,6 @@ async function init() {
     if (restart === 'y' || restart === 'yes') {
         const ids = await parse_existing_session_ids();
         if (ids.length > 0) {
-            await adjust_settings();
             await botManager.createBotsFromList(ids);
             return;
         } else {
@@ -43,7 +39,6 @@ async function init() {
 
 
 
-    await adjust_settings();
     await botManager.createBots(number_of_bots);
 }
 
@@ -66,18 +61,6 @@ async function parse_existing_session_ids() {
     }
     logger.info("No available sessions found. You need to register new bots");
     return [];
-}
-
-async function adjust_settings() {
-    const config = await configManagerService.getConfig();
-    logger.info("Current message: " + (config.message || "None"));
-    logger.info("Do you want to continue with that message? | Y/N");
-
-    if (prompt()?.toLowerCase() !== 'y') {
-        logger.info("Enter new message: ");
-        const new_message = prompt();
-        await configManagerService.updateMessageText(new_message);
-    }
 }
 
 
