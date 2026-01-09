@@ -1,3 +1,5 @@
 {
-  "MESSAGE_DELAY": "{name} hi there"
+  "CSV_PHONE_COLUMN": "phone",
+  "CSV_NAME_COLUMN": "name",
+  "message": "hello, {name}"
 }

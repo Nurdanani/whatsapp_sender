@@ -14,33 +14,33 @@ const configManagerService = new ConfigManager();
 async function init() {
     logger.info("Do you want to restart previous sessions? (if any exist) | Y/N");
     const restart = prompt()?.toLowerCase();
-    
+
     if (restart === 'y' || restart === 'yes') {
         const ids = await parse_existing_session_ids();
         if (ids.length > 0) {
             await adjust_settings();
             await botManager.createBotsFromList(ids);
             return;
-        }else{
+        } else {
             await clear_sessions();
             logger.info("Sessions are cleared. Initializing new ones");
         }
-    }else{
+    } else {
         await clear_sessions();
         logger.info("Sessions are cleared. Initializing new ones");
     }
 
-    
+
     let number_of_bots;
 
     while (true) {
         logger.info("How many new sessions do you need? (1-5)");
         number_of_bots = Number(prompt());
-        
+
         if (number_of_bots > 0 && number_of_bots <= 5) break;
         logger.error("Incorrect number of sessions entered. Please enter 1-5.");
     }
-    
+
 
 
     await adjust_settings();
@@ -72,17 +72,17 @@ async function adjust_settings() {
     const config = await configManagerService.getConfig();
     logger.info("Current message: " + (config.message || "None"));
     logger.info("Do you want to continue with that message? | Y/N");
-    
+
     if (prompt()?.toLowerCase() !== 'y') {
         logger.info("Enter new message: ");
         const new_message = prompt();
-        await configManagerService.updateMessage(new_message);
+        await configManagerService.updateMessageText(new_message);
     }
 }
 
 
 async function clear_sessions() {
-    await fs.rm('./sessions/', {recursive : true, force : true});
+    await fs.rm('./sessions/', { recursive: true, force: true });
     await fs.mkdir('./sessions/');
 }
 

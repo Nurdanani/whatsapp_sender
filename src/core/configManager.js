@@ -2,22 +2,13 @@ const path = require('path')
 const fs = require('fs').promises
 const { logger } = require('./logger.js')
 
-class ConfigManager{
-    constructor(config_path){
+class ConfigManager {
+    constructor(config_path) {
         this.CONFIG_PATH = config_path || path.join(__dirname, 'config.json');
     }
 
-    async updateMessage(new_message){
-        await this.updateConfig({message : new_message});
-    }
-
-    build_formatted_message(name) {
-        const greetings = ['Здравствуйте', 'Добрый день', 'Доброго времени суток'];
-        const hello = greetings[Math.floor(Math.random() * greetings.length)];
-        
-        return message
-            .replace(/{name}/g, name)
-            .replace(/{hello}/g, hello);
+    async updateMessageText(new_message) {
+        await this.updateConfig({ message: new_message });
     }
 
     async getConfig() {
@@ -43,4 +34,6 @@ class ConfigManager{
 }
 
 
-module.exports = { ConfigManager };
+const configManager = new ConfigManager();
+
+module.exports = { configManager };

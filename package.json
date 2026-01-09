@@ -13,9 +13,12 @@
   "type": "commonjs",
   "dependencies": {
     "axios": "^1.13.2",
+    "csv-parse": "^6.1.0",
     "csv-parser": "^3.2.0",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "node-phone-utils": "^2.1.1",
+    "papaparse": "^5.5.3",
     "prompt-sync": "^4.2.0",
     "qrcode-terminal": "^0.12.0",
     "whatsapp-web.js": "github:pedroslopez/whatsapp-web.js#main",
