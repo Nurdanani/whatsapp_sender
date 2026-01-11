@@ -19,4 +19,4 @@ RUN npm install --only=production \
 COPY . .
 
 
-CMD ["node", "src/main.js"]
+CMD ["node", "src/init.js"]

@@ -1,7 +1,7 @@
 const phoneUtils = require('node-phone-utils').createInstance();
 const { logger } = require('../core/logger.js');
 const fs = require('fs');
-const { Config } = require('../core/config_manager.js');
+
 
 
 
@@ -36,6 +36,13 @@ function buildFormattedMessage(message, name = '') {
         .replaceAll('{greet}', greet);
 }
 
+
+
+
+
+
+
+
 function validateAndGetFormattedPhone(phone) {
     try {
         if (!phone) return false;
@@ -50,35 +57,35 @@ function validateAndGetFormattedPhone(phone) {
 }
 
 
+
+
+
 function parse_existing_session_ids() {
     try {
-
         const sessions = fs.readdirSync('./sessions');
         const result = [];
         for (const session_name of sessions) {
             const id = Number(session_name.split('-')[1]);
             result.push(id);
         }
-
         if (!result) {
             logger.error("No available sessions found. You need to register new bots");
             return [];
         };
 
         return result;
-
     } catch (error) {
         logger.error('Can not parse sessions. Error : ' + error);
         return [];
     }
-
 }
 
-function getVariablesFromConfig() {
-    const CONFIG = Config();
-    const CONFIG_JSON = CONFIG.getConfig();
-
+function clearSessions() {
+    fs.rmSync('./sessions/', { recursive: true, force: true });
+    fs.mkdirSync('./sessions/');
 }
 
 
-module.exports = { validateAndGetFormattedPhone, buildFormattedMessage, parse_existing_session_ids }
+
+
+module.exports = { validateAndGetFormattedPhone, buildFormattedMessage, parse_existing_session_ids, clearSessions }

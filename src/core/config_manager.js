@@ -4,22 +4,13 @@ const { logger } = require('./logger.js')
 
 class Config {
     constructor() {
-        this.CONFIG_PATH = path.join(__dirname, 'config.json');
+        this.CONFIG_PATH = path.join(__dirname, '../../config.json');
         this.message = null; // message that bots will send.
         this.phone_keyword = null // these are used for parsing csv file
         this.name_keyword = null; // these are used for parsing csv file
+        this.csv_path = null;
+        this.delay = null;
         this.handleConfigChanges();
-    }
-
-    handleConfigChanges() {
-        const CONFIG = this.getConfig();
-        this.message = CONFIG.MESSAGE;
-        this.phone_keyword = CONFIG.CSV_PHONE_COLUMN;
-        this.name_keyword = CONFIG.CSV_NAME_COLUMN;
-    }
-
-    updateMessageContent(new_message) {
-        this.updateConfig({ message: new_message });
     }
 
     getConfig() {
@@ -32,7 +23,7 @@ class Config {
         }
     }
 
-    updateConfig(newValues) {
+    update(newValues) {
         try {
             const currentConfig = this.getConfig();
             const updatedConfig = { ...currentConfig, ...newValues };
@@ -43,9 +34,21 @@ class Config {
             logger.error("Error updating config:", error);
         }
     }
+
+    handleConfigChanges() {
+        const CONFIG = this.getConfig();
+        this.message = CONFIG.MESSAGE;
+        this.phone_keyword = CONFIG.PHONE_KEYWORD;
+        this.name_keyword = CONFIG.NAME_KEYWORD;
+        this.csv_path = CONFIG.CSV_PATH;
+        this.delay = CONFIG.DELAY * 1000;
+    }
+
+    updateMessageContent(new_message) {
+        this.update({ message: new_message });
+    }
 }
 
+const cfg = new Config();
 
-
-
-module.exports = { Config };
+module.exports = { cfg };

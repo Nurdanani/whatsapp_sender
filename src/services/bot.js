@@ -2,11 +2,13 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const { logger } = require('../core/logger.js');
 const qrcode = require('qrcode-terminal');
 const { parse_existing_session_ids } = require('./misc.js');
-
+const { botEvents } = require('../core/event_system.js');
 
 
 class Bot {
+
     constructor(session_id) {
+        this.ready = false;
         this.clientId = session_id;
         this.client = new Client({
             authStrategy: new LocalAuth({
@@ -18,30 +20,34 @@ class Bot {
                 args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu']
             }
         });
-
         this.subscribeToEvents();
     }
-
 
     subscribeToEvents() {
 
         this.client.on('qr', qr => {
-            logger.info("Connecting to : " + this.clientId);
+            logger.warn("-------------Connecting to Bot №" + this.clientId + "--------------------");
             qrcode.generate(qr, { small: true });
         });
 
-        this.client.once('ready', () => logger.info('Client ' + this.clientId + ' is ready'));
+        this.client.once('ready', () => {
+            this.ready = true;
+            logger.info('Client №' + this.clientId + ' is ready');
+        });
+
 
     }
+
     async sendMessage(chat_id, content) {
         try {
             this.client.sendMessage(chat_id, content);
         }
         catch (error) {
-            logger.error("BOT" + this.clientId + "can not send message. Error : " + error);
+            logger.error("Bot №" + this.clientId + "can not send message. Error : " + error);
         }
 
     }
+
     async start() {
         await this.client.initialize();
     }
@@ -50,7 +56,6 @@ class Bot {
 class BotManager {
     constructor() {
         this.bots = [];
-        this.bots_ids = [];
         this._gen = null;
     }
 
@@ -60,16 +65,16 @@ class BotManager {
             return;
         }
         this.bots.push(botInstance);
-        this.bots_ids.push(botInstance.clientId);
         await botInstance.start();
     }
 
 
-    async createBots(number_of_bots) {
+    async initSessions(number_of_bots) {
         for (let i = 1; i <= number_of_bots; i++) {
             const bot = new Bot(i);
             await this.addBot(bot);
         }
+        return await this.checkBotsReady();
     }
 
     async restoreSessions() {
@@ -79,8 +84,10 @@ class BotManager {
             const bot = new Bot(id);
             await this.addBot(bot);
         });
-
         await Promise.allSettled(promises);
+        const result = await this.checkBotsReady();
+        return result;
+
     }
 
     getBotByClientId(clientId) {
@@ -91,25 +98,41 @@ class BotManager {
             logger.error("Can not find bot by client id : " + clientId + "Error : " + error);
         }
     }
-    *_id_generator() {
+    *_bot_generator() {
         let i = 0;
         while (true) {
-            yield this.bots_ids[i % this.bots_ids.length];
+            yield this.bots[i % this.bots.length];
             i++;
         }
     }
-    id_iterator() {
+    bot_iterator() {
+        // infinmite generator. returns bots instances, 1 by 1, looping after exhaustion of generator
         if (!this._gen) {
-            this._gen = this._id_generator();
+            this._gen = this._bot_generator();
         }
         return this._gen.next().value;
     }
 
-    async sendMessageByClientId(clientId, chat_id, content) {
-        let bot = this.bots.find(b => b.clientId === clientId);
-        console.log(clientId, chat_id, content);
-        if (!bot) throw Error('Can not find bot with such name : ' + clientId);
-        // ! TEST ME await bot.client.sendMessage(chat_id, content);
+    async checkBotsReady() {
+        const timer = setInterval(() => {
+            let all_ready = true;
+
+            for (let i = 0; i < this.bots.length; i++) {
+                if (!this.bots[i].ready) {
+                    all_ready = false;
+                    break;
+                };
+            }
+
+            if (all_ready) {
+                botEvents.emit('bots_ready');
+                clearInterval(timer);
+            }
+
+
+        }, 1500);
+        const result = await botEvents.waitBotsReady();
+        return result;
     }
 
 }

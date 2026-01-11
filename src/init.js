@@ -1,12 +1,9 @@
-const fs = require('fs');
 const prompt = require('prompt-sync')();
 const { logger } = require('./core/logger.js');
 const { MessageQueue } = require('./services/message_queue.js');
 const { botManager } = require('./services/bot.js');
-const { Config } = require('./core/config_manager.js');
-
-const CONFIG = new Config();
-const CONFIG_JSON = CONFIG.getConfig();
+const { cfg } = require('./core/config_manager.js');
+const { clearSessions } = require('./services/misc.js');
 
 async function main() {
     const restart = askYesNo("Do you want to restart previous sessions? (if any exist) | Y/N");
@@ -15,14 +12,14 @@ async function main() {
         const delay = askDelay();
         await botManager.restoreSessions();
         return await startUp();
+    } else {
+        clearSessions();
+        logger.info("Sessions are cleared. Registering new ones...");
     }
 
-    clearSessions();
-    logger.info("Sessions are cleared. Registering new ones...");
-
     const number_of_bots = askNumberOfBots();
-    const delay = askDelay()
-    await botManager.createBots(number_of_bots);
+    const delay = askDelay();
+    await botManager.initSessions(number_of_bots);
     return await startUp();
 }
 
@@ -42,6 +39,7 @@ function askNumber(message, min, max, errorMsg) {
         if (num >= min && num <= max) return num;
         logger.error(errorMsg);
     }
+    return;
 }
 
 function askDelay() {
@@ -51,9 +49,10 @@ function askDelay() {
         Infinity,
         "You can not set interval < 10s. Please, enter correct interval."
     );
-    CONFIG.updateConfig({ DELAY: Math.max(10, delay) });
+    cfg.update({ DELAY: Math.max(10, delay) });
     return delay;
 }
+
 function askNumberOfBots() {
     const number_of_bots = askNumber(
         "How many new sessions do you need? (1-5)",
@@ -66,22 +65,24 @@ function askNumberOfBots() {
 
 async function startUp() {
     const proceed = askYesNo("Do you want to start sending messages? | Y/N");
-
     if (!proceed) {
         logger.info('Ok, closing ');
         process.exit(0);
     }
-
     logger.info('Ok, starting up');
 
-    // !---------------------------------------------------------------------
-}
+    const q = new MessageQueue();
+    q.buildMessageChunks();
 
+    const sendLoop = async () => {
+        const sendingFinished = await q.sendCurrentChunk();
+        if (sendingFinished) return;
+        setTimeout(sendLoop, cfg.delay);
+    };
 
+    sendLoop();
 
-function clearSessions() {
-    fs.rmSync('./sessions/', { recursive: true, force: true });
-    fs.mkdirSync('./sessions/');
+    return;
 }
 
 
