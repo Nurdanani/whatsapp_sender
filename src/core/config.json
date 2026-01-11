@@ -1,5 +1,7 @@
 {
-  "CSV_PHONE_COLUMN": "phone",
-  "CSV_NAME_COLUMN": "name",
-  "message": "hello, {name}"
+  "PHONE_KEYWORD": "Phone",
+  "NAME_KEYWORD": "First Name",
+  "MESSAGE": "{greet}, {name}",
+  "CSV_PATH": "./data.csv",
+  "DELAY": 10
 }

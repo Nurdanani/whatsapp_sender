@@ -1,76 +1,89 @@
-const fs = require('fs').promises;
+const fs = require('fs');
 const prompt = require('prompt-sync')();
 const { logger } = require('./core/logger.js');
-const csv = require('csv-parser');
-const crypto = require('crypto');
+const { MessageQueue } = require('./services/message_queue.js');
+const { botManager } = require('./services/bot.js');
+const { Config } = require('./core/config_manager.js');
 
+const CONFIG = new Config();
+const CONFIG_JSON = CONFIG.getConfig();
 
-const { botManager } = require('./services/bot.js')
+async function main() {
+    const restart = askYesNo("Do you want to restart previous sessions? (if any exist) | Y/N");
 
-
-async function init() {
-    logger.info("Do you want to restart previous sessions? (if any exist) | Y/N");
-    const restart = prompt()?.toLowerCase();
-
-    if (restart === 'y' || restart === 'yes') {
-        const ids = await parse_existing_session_ids();
-        if (ids.length > 0) {
-            await botManager.createBotsFromList(ids);
-            return;
-        } else {
-            await clear_sessions();
-            logger.info("Sessions are cleared. Initializing new ones");
-        }
-    } else {
-        await clear_sessions();
-        logger.info("Sessions are cleared. Initializing new ones");
+    if (restart) {
+        const delay = askDelay();
+        await botManager.restoreSessions();
+        return await startUp();
     }
 
+    clearSessions();
+    logger.info("Sessions are cleared. Registering new ones...");
 
-    let number_of_bots;
-
-    while (true) {
-        logger.info("How many new sessions do you need? (1-5)");
-        number_of_bots = Number(prompt());
-
-        if (number_of_bots > 0 && number_of_bots <= 5) break;
-        logger.error("Incorrect number of sessions entered. Please enter 1-5.");
-    }
-
-
-
+    const number_of_bots = askNumberOfBots();
+    const delay = askDelay()
     await botManager.createBots(number_of_bots);
+    return await startUp();
 }
 
 
 
-async function parse_existing_session_ids() {
-    try {
-        const ids = await fs.readdir('./sessions');
-        if (ids.length > 0) {
-            logger.info("Available sessions:");
-            ids.forEach(id => logger.info(id));
-            ids.forEach(id => {
-                id = id.replace('session_', '');
-            });
-            logger.info("Recovering sessions...");
-            return ids;
-        }
-    } catch (e) {
-        logger.error('cant parse sessions');
+function askYesNo(message) {
+    logger.info(message);
+    const answer = prompt()?.toLowerCase();
+    return answer === 'y' || answer === 'yes';
+}
+
+function askNumber(message, min, max, errorMsg) {
+    let num;
+    while (true) {
+        logger.info(message);
+        num = Number(prompt());
+        if (num >= min && num <= max) return num;
+        logger.error(errorMsg);
     }
-    logger.info("No available sessions found. You need to register new bots");
-    return [];
+}
+
+function askDelay() {
+    const delay = askNumber(
+        "Set time interval for messages, in seconds (minimal delay = 10s) :",
+        10,
+        Infinity,
+        "You can not set interval < 10s. Please, enter correct interval."
+    );
+    CONFIG.updateConfig({ DELAY: Math.max(10, delay) });
+    return delay;
+}
+function askNumberOfBots() {
+    const number_of_bots = askNumber(
+        "How many new sessions do you need? (1-5)",
+        1,
+        5,
+        "Incorrect number of sessions entered. Please, enter in 1-5 range."
+    );
+    return number_of_bots;
+}
+
+async function startUp() {
+    const proceed = askYesNo("Do you want to start sending messages? | Y/N");
+
+    if (!proceed) {
+        logger.info('Ok, closing ');
+        process.exit(0);
+    }
+
+    logger.info('Ok, starting up');
+
+    // !---------------------------------------------------------------------
 }
 
 
-async function clear_sessions() {
-    await fs.rm('./sessions/', { recursive: true, force: true });
-    await fs.mkdir('./sessions/');
+
+function clearSessions() {
+    fs.rmSync('./sessions/', { recursive: true, force: true });
+    fs.mkdirSync('./sessions/');
 }
 
 
 
-
-init();
-
+main();

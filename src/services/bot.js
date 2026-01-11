@@ -1,7 +1,7 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const { logger } = require('../core/logger.js');
 const qrcode = require('qrcode-terminal');
-const { EventEmitter } = require('events');
+const { parse_existing_session_ids } = require('./misc.js');
 
 
 
@@ -33,67 +33,88 @@ class Bot {
         this.client.once('ready', () => logger.info('Client ' + this.clientId + ' is ready'));
 
     }
+    async sendMessage(chat_id, content) {
+        try {
+            this.client.sendMessage(chat_id, content);
+        }
+        catch (error) {
+            logger.error("BOT" + this.clientId + "can not send message. Error : " + error);
+        }
+
+    }
     async start() {
         await this.client.initialize();
     }
 }
 
-class BotManager extends EventEmitter {
+class BotManager {
     constructor() {
-        super()
-        this.bots = {};
-        this.subscribeToEvents()
+        this.bots = [];
+        this.bots_ids = [];
+        this._gen = null;
     }
-    subscribeToEvents() {
-        this.on('on_message_sent', () => setTimeout(async () => await this.sendMessagesFromQueue(), 15000))
-    }
-
-
 
     async addBot(botInstance) {
         if (this.bots.length >= 5) {
-            logger.info('All slots are full');
+            logger.info('All bot slots are full');
             return;
         }
-        this.bots[botInstance.clientId] = botInstance;
+        this.bots.push(botInstance);
+        this.bots_ids.push(botInstance.clientId);
         await botInstance.start();
     }
+
 
     async createBots(number_of_bots) {
         for (let i = 1; i <= number_of_bots; i++) {
             const bot = new Bot(i);
             await this.addBot(bot);
-            logger.info(`Bot initialized: ${i}`);
         }
     }
 
-    async createBotsFromList(botsList) {
-        logger.info(botsList);
-        for (const id in botsList) {
-            const bot = new Bot(Number(id) + 1);
+    async restoreSessions() {
+        const ids = parse_existing_session_ids();
+
+        const promises = ids.map(async (id) => {
+            const bot = new Bot(id);
             await this.addBot(bot);
-            logger.info(`Bot initialized: ${Number(id) + 1}`);
+        });
+
+        await Promise.allSettled(promises);
+    }
+
+    getBotByClientId(clientId) {
+        try {
+            return this.bots.find(b => b.clientId === clientId);
         }
+        catch (error) {
+            logger.error("Can not find bot by client id : " + clientId + "Error : " + error);
+        }
+    }
+    *_id_generator() {
+        let i = 0;
+        while (true) {
+            yield this.bots_ids[i % this.bots_ids.length];
+            i++;
+        }
+    }
+    id_iterator() {
+        if (!this._gen) {
+            this._gen = this._id_generator();
+        }
+        return this._gen.next().value;
     }
 
     async sendMessageByClientId(clientId, chat_id, content) {
-        const bot = this.bots[clientId];
-        if (!bot) throw Error('Can not find bot with such name : ' + this.bots[clientId]);
-        // ! ------------------------------------------
+        let bot = this.bots.find(b => b.clientId === clientId);
+        console.log(clientId, chat_id, content);
+        if (!bot) throw Error('Can not find bot with such name : ' + clientId);
+        // ! TEST ME await bot.client.sendMessage(chat_id, content);
+    }
 
-    }
-    getClientIds() {
-        const clientIds = [];
-        Object.entries(this.bots).forEach((key, value) => {
-            clientIds.push(key);
-        });
-        return clientIds;
-    }
 }
 
 const botManager = new BotManager();
-
-
 
 
 module.exports = { botManager };
