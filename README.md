@@ -1,9 +1,20 @@
+## src/core/config.json
 
-src\core\config.json : 
+```json
 {
-  "PHONE_KEYWORD": "Phone",   // put title of phone column from a csv here (CASE MATTERS -> Phone != phone)
-  "NAME_KEYWORD": "First Name", // put title of name column from a csv here (if present, otherwise leave as is) (CASE MATTERS -> First Name != first name)
-  "MESSAGE": "{greet}, {name}", // message to be sent. greet and name are variables
-  "CSV_PATH": "./data.csv", // rename your csv file to data.csv and put your it in the root directory of the project 
-  "DELAY": 10 // individual delay between messages
+  "PHONE_KEYWORD": "Phone", 
+  // Title of the phone column from the CSV file (case-sensitive)
+
+  "NAME_KEYWORD": "First Name", 
+  // Title of the name column from the CSV file (case-sensitive, optional)
+
+  "MESSAGE": "{greet}, {name}", 
+  // Message template to be sent
+  // Available variables: {greet}, {name}
+
+  "CSV_PATH": "./data.csv", 
+  // Path to the CSV file (must be in the project root)
+
+  "DELAY": 10 
+  // Delay between individual messages (in seconds)
 }
