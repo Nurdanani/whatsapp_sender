@@ -80,6 +80,16 @@ function parse_existing_session_ids() {
     }
 }
 
+
+
+function delayRandomizer(delay_in_ms) {
+    if (typeof delay_in_ms !== 'number') throw Error('Invalid type passed to randomizer');
+    let jitter = Math.random() * 2500;
+    const sign = Math.random();
+    if (sign <= 0.5) jitter = jitter * -1;
+    return Math.max(25000 + jitter, delay_in_ms + jitter);
+}
+
 function clearSessions() {
     fs.rmSync('./sessions/', { recursive: true, force: true });
     fs.mkdirSync('./sessions/');
@@ -88,4 +98,10 @@ function clearSessions() {
 
 
 
-module.exports = { validateAndGetFormattedPhone, buildFormattedMessage, parse_existing_session_ids, clearSessions }
+module.exports = {
+    validateAndGetFormattedPhone,
+    buildFormattedMessage,
+    parse_existing_session_ids,
+    clearSessions,
+    delayRandomizer,
+}

@@ -3,7 +3,7 @@ const { logger } = require('./core/logger.js');
 const { MessageQueue } = require('./services/message_queue.js');
 const { botManager } = require('./services/bot.js');
 const { cfg } = require('./core/config_manager.js');
-const { clearSessions } = require('./services/misc.js');
+const { clearSessions, delayRandomizer } = require('./services/misc.js');
 
 async function main() {
     const restart = askYesNo("Do you want to restart previous sessions? (if any exist) | Y/N");
@@ -44,12 +44,12 @@ function askNumber(message, min, max, errorMsg) {
 
 function askDelay() {
     const delay = askNumber(
-        "Set time interval for messages, in seconds (minimal delay = 10s) :",
-        10,
+        "Set time interval for messages, in seconds (minimal delay = 25s) :",
+        25,
         Infinity,
-        "You can not set interval < 10s. Please, enter correct interval."
+        "You can not set interval < 25s. Please, enter correct interval."
     );
-    cfg.update({ DELAY: Math.max(10, delay) });
+    cfg.update({ DELAY: Math.max(25, delay) });
     return delay;
 }
 
@@ -77,7 +77,7 @@ async function startUp() {
     const sendLoop = async () => {
         const sendingFinished = await q.sendCurrentChunk();
         if (sendingFinished) return;
-        setTimeout(sendLoop, cfg.delay);
+        setTimeout(sendLoop, delayRandomizer(cfg.delay));
     };
 
     sendLoop();

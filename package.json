@@ -17,6 +17,8 @@
     "dotenv": "^17.2.3",
     "node-phone-utils": "^2.1.1",
     "prompt-sync": "^4.2.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "qrcode-terminal": "^0.12.0",
     "whatsapp-web.js": "github:pedroslopez/whatsapp-web.js#main",
     "winston": "^3.19.0"

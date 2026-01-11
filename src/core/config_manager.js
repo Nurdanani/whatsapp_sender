@@ -10,6 +10,7 @@ class Config {
         this.name_keyword = null; // these are used for parsing csv file
         this.csv_path = null;
         this.delay = null;
+        this.DEBUG = null;
         this.handleConfigChanges();
     }
 
@@ -42,6 +43,7 @@ class Config {
         this.name_keyword = CONFIG.NAME_KEYWORD;
         this.csv_path = CONFIG.CSV_PATH;
         this.delay = CONFIG.DELAY * 1000;
+        this.DEBUG = CONFIG.DEBUG;
     }
 
     updateMessageContent(new_message) {

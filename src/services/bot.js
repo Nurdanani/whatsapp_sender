@@ -3,8 +3,7 @@ const { logger } = require('../core/logger.js');
 const qrcode = require('qrcode-terminal');
 const { parse_existing_session_ids } = require('./misc.js');
 const { botEvents } = require('../core/event_system.js');
-
-
+const { cfg } = require('../core/config_manager.js');
 class Bot {
 
     constructor(session_id) {
@@ -17,7 +16,7 @@ class Bot {
             }),
             puppeteer: {
                 headless: 'shell',
-                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu']
+                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--disable-blink-features=AutomationControlled']
             }
         });
         this.subscribeToEvents();
@@ -74,7 +73,8 @@ class BotManager {
             const bot = new Bot(i);
             await this.addBot(bot);
         }
-        return await this.checkBotsReady();
+
+        if (cfg.DEBUG === false) return await this.checkBotsReady();
     }
 
     async restoreSessions() {
@@ -85,8 +85,8 @@ class BotManager {
             await this.addBot(bot);
         });
         await Promise.allSettled(promises);
-        const result = await this.checkBotsReady();
-        return result;
+
+        if (cfg.DEBUG === false) return await this.checkBotsReady();
 
     }
 

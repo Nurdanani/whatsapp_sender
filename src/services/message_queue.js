@@ -2,7 +2,7 @@ const fs = require('fs');
 const { parse } = require('csv-parse/sync');
 
 const { logger } = require('../core/logger.js');
-const { buildFormattedMessage } = require('./misc.js');
+const { buildFormattedMessage, delayRandomizer } = require('./misc.js');
 const { validateAndGetFormattedPhone } = require('./misc.js')
 
 
@@ -20,6 +20,7 @@ class MessageQueue {
         //chunk queue is a queue of chunks, each time single chunk messages are sent, app sets time delay.
         this.chunk_queue = [];
         this.unsent_messages = [];
+        this.sent_messages = [];
     }
 
     #getParsedCsvData() {
@@ -79,22 +80,28 @@ class MessageQueue {
         if (!chunk) {
             logger.warn("Bots have sent all the messages");
             logger.warn("-----------Summary-----------");
-            logger.warn("Total messages sent : " + (this.filtered_records.length - this.unsent_messages));
+            logger.warn("Total messages sent : " + (this.sent_messages.length));
             logger.warn("Invalid rows from csv : " + invalid_records);
             return true;
         };
         for (let i = 0; i < chunk.length; i++) {
             const receiver_chat_id = chunk[i].chat_id;
             const name = chunk[i]?.name || ' ';
-            const content = chunk[i].content;
+
             const bot = chunk[i].bot;
+            const content = chunk[i].content;
+
             try {
-                console.log(chunk[i]);
-                // ! bot.sendMessage(receiver_chat_id, content);
+                if (cfg.DEBUG === true) {
+                    logger.debug(chunk[i]);
+                    continue;
+                }
+                await bot.sendMessage(receiver_chat_id, content);
+                this.sent_messages.push(chunk[i]);
             }
             catch (error) {
                 this.unsent_messages.push(chunk[i]);
-                logger.error("Bot №" + bot.clientId + " colud not send message to " + receiver_chat_id + ", " + name + " Error : " + err);
+                logger.error("Bot №" + bot.clientId + " colud not send message to " + receiver_chat_id + ", " + name + " Error : " + error);
             }
         }
         return false;
