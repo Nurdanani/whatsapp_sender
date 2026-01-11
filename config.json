@@ -3,5 +3,5 @@
   "NAME_KEYWORD": "First Name",
   "MESSAGE": "{greet}, {name}",
   "CSV_PATH": "./data.csv",
-  "DELAY": 15
+  "DELAY": 10
 }

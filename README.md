@@ -18,3 +18,8 @@
   "DELAY": 10 
   // Delay between individual messages (in seconds)
 }
+
+
+```docker
+docker build . -t wp_sender:v1
+docker run -it wp_sender:v1
