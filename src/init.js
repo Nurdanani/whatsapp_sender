@@ -43,13 +43,16 @@ function askNumber(message, min, max, errorMsg) {
 }
 
 function askDelay() {
+    let minimal = 25;
+    if(cfg.DEBUG === true) minimal = 1;
     const delay = askNumber(
         "Set time interval for messages, in seconds (minimal delay = 25s) :",
-        25,
+        minimal,
         Infinity,
         "You can not set interval < 25s. Please, enter correct interval."
     );
     cfg.update({ DELAY: Math.max(25, delay) });
+    if (cfg.DEBUG === true) cfg.update({ DELAY: Math.min(25, delay) });
     return delay;
 }
 

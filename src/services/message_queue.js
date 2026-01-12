@@ -2,7 +2,7 @@ const fs = require('fs');
 const { parse } = require('csv-parse/sync');
 
 const { logger } = require('../core/logger.js');
-const { buildFormattedMessage, delayRandomizer } = require('./misc.js');
+const { buildFormattedMessage } = require('./misc.js');
 const { validateAndGetFormattedPhone } = require('./misc.js')
 
 
@@ -21,6 +21,7 @@ class MessageQueue {
         this.chunk_queue = [];
         this.unsent_messages = [];
         this.sent_messages = [];
+        this.invalid_records = [];
     }
 
     #getParsedCsvData() {
@@ -28,7 +29,6 @@ class MessageQueue {
         const csvData = fs.readFileSync(this.csv_path, 'utf-8');
         const records = parse(csvData, { columns: true });
         const filtered_records = [];
-        const invalid_records = [];
         for (const record of records) {
             // bots will only consider rows with valid phone,otherwise skip the entry from csv
             const formattedPhone = validateAndGetFormattedPhone(record[cfg.phone_keyword]);
@@ -36,12 +36,12 @@ class MessageQueue {
             if (formattedPhone) {
                 record[cfg.phone_keyword] = formattedPhone;
                 filtered_records.push(record);
-            } else {
-                invalid_records.push(record);
             }
 
         }
-        logger.info('Number of skipped records from csv (w/o valid phone number) : ' + invalid_records.length);
+        logger.info('Total records from csv : ' + records?.length);
+        logger.info('Number of valid records : ' + filtered_records?.length);
+        
         return filtered_records;
     }
 
@@ -80,8 +80,10 @@ class MessageQueue {
         if (!chunk) {
             logger.warn("Bots have sent all the messages");
             logger.warn("-----------Summary-----------");
-            logger.warn("Total messages sent : " + (this.sent_messages.length));
-            logger.warn("Invalid rows from csv : " + invalid_records);
+            logger.warn('Number of successful messages : ' + this.sent_messages?.length);
+            logger.warn('Number of unsent messages : ' + this.unsent_messages?.length);
+            logger.warn('Unsent messages : ' + this.unsent_messages);
+    
             return true;
         };
         for (let i = 0; i < chunk.length; i++) {
@@ -92,16 +94,22 @@ class MessageQueue {
             const content = chunk[i].content;
 
             try {
+                logger.info("Sending message to : " + receiver_chat_id);
                 if (cfg.DEBUG === true) {
-                    logger.debug(chunk[i]);
+                    this.sent_messages.push("[DEBUG] Message is not sent.");
                     continue;
                 }
+                const chat = await bot.client.getChatById(receiver_chat_id);
+                await chat.sendSeen();
+                await chat.sendStateTyping();
                 await bot.sendMessage(receiver_chat_id, content);
+                await chat.clearState();
                 this.sent_messages.push(chunk[i]);
             }
             catch (error) {
+                chunk[i].bot.client = null;
                 this.unsent_messages.push(chunk[i]);
-                logger.error("Bot №" + bot.clientId + " colud not send message to " + receiver_chat_id + ", " + name + " Error : " + error);
+                logger.error("Bot №" + bot.clientId + " colud not send message to " + receiver_chat_id + " Error : " + error);
             }
         }
         return false;

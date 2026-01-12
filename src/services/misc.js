@@ -1,7 +1,7 @@
 const phoneUtils = require('node-phone-utils').createInstance();
 const { logger } = require('../core/logger.js');
 const fs = require('fs');
-
+const { cfg } = require('../core/config_manager.js');
 
 
 
@@ -87,6 +87,9 @@ function delayRandomizer(delay_in_ms) {
     let jitter = Math.random() * 2500;
     const sign = Math.random();
     if (sign <= 0.5) jitter = jitter * -1;
+
+    if (cfg.DEBUG === true) return delay_in_ms;
+
     return Math.max(25000 + jitter, delay_in_ms + jitter);
 }
 

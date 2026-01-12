@@ -20,6 +20,7 @@
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "qrcode-terminal": "^0.12.0",
+    "user-agents": "^1.1.669",
     "whatsapp-web.js": "github:pedroslopez/whatsapp-web.js#main",
     "winston": "^3.19.0"
   }

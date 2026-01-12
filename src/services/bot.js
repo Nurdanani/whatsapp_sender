@@ -4,9 +4,27 @@ const qrcode = require('qrcode-terminal');
 const { parse_existing_session_ids } = require('./misc.js');
 const { botEvents } = require('../core/event_system.js');
 const { cfg } = require('../core/config_manager.js');
+
+const puppeteer = require('puppeteer-extra');
+
+const UserAgent = require('user-agents')
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+stealth = StealthPlugin();
+
+stealth.enabledEvasions.delete('user-agent-override');
+puppeteer.use(stealth);
+
 class Bot {
 
     constructor(session_id) {
+
+        const randomAgent = new UserAgent({ deviceCategory: 'desktop'});
+        const randomAgentStr = randomAgent.toString();
+        
+        const width = randomAgent.data.screenWidth;
+        const height = randomAgent.data.screenHeight;
+
+
         this.ready = false;
         this.clientId = session_id;
         this.client = new Client({
@@ -14,9 +32,16 @@ class Bot {
                 clientId: session_id,
                 dataPath: './sessions/',
             }),
+            userAgent: randomAgentStr,
             puppeteer: {
-                headless: 'shell',
-                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--disable-blink-features=AutomationControlled']
+                headless: 'new',
+                defaultViewport: { width , height },
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-blink-features=AutomationControlled',
+                    '--disable-features=IsolateOrigins,site-per-process',
+                ],
             }
         });
         this.subscribeToEvents();

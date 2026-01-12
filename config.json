@@ -1,6 +1,6 @@
 {
   "PHONE_KEYWORD": "Phone",
-  "NAME_KEYWORD": "First Name",
+  "NAME_KEYWORD": "Name",
   "MESSAGE": "{greet}, {name}",
   "CSV_PATH": "./data.csv",
   "DELAY": 25,
