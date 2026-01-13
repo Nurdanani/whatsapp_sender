@@ -20,14 +20,16 @@ class Bot {
 
         const randomAgent = new UserAgent({ deviceCategory: 'desktop'});
         const randomAgentStr = randomAgent.toString();
+        console.log(randomAgentStr);
         
         const width = randomAgent.data.screenWidth;
         const height = randomAgent.data.screenHeight;
 
-
+        
         this.ready = false;
         this.clientId = session_id;
         this.client = new Client({
+
             authStrategy: new LocalAuth({
                 clientId: session_id,
                 dataPath: './sessions/',
@@ -139,7 +141,9 @@ class BotManager {
     }
 
     async checkBotsReady() {
-        const timer = setInterval(() => {
+        let timer;
+        try{
+        timer = setInterval(() => {
             let all_ready = true;
 
             for (let i = 0; i < this.bots.length; i++) {
@@ -158,6 +162,10 @@ class BotManager {
         }, 1500);
         const result = await botEvents.waitBotsReady();
         return result;
+        } catch (error){
+            logger.error('Bots can not initialize. Error : ' + error);
+            clearInterval(timer);
+        }
     }
 
 }

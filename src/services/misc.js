@@ -94,8 +94,14 @@ function delayRandomizer(delay_in_ms) {
 }
 
 function clearSessions() {
-    fs.rmSync('./sessions/', { recursive: true, force: true });
-    fs.mkdirSync('./sessions/');
+    try{
+        fs.rmSync('./sessions/', { recursive: true, force: true });
+        fs.mkdirSync('./sessions/');
+    }
+    catch (error){
+        logger.error('Could not erase old sessions.  Error : ' + error);
+    }
+
 }
 
 

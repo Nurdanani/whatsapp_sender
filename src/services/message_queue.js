@@ -12,7 +12,7 @@ const { botManager } = require('./bot.js');
 class MessageQueue {
     //creates chunks, chunks are used to share messages between all the bots,
     // and create time delay between sending them.
-    // each chunk is array filled with 1-5 objects (object contains msg + id of responsible bot)
+    // each chunk is array filled with 1-5 objects (object contains msg + instance of a bot)
     // when all the messages from chunk are sent, app waits some time before running new chunk
     constructor() {
         this.csv_path = cfg.csv_path;
@@ -21,7 +21,6 @@ class MessageQueue {
         this.chunk_queue = [];
         this.unsent_messages = [];
         this.sent_messages = [];
-        this.invalid_records = [];
     }
 
     #getParsedCsvData() {
