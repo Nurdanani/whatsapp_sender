@@ -15,7 +15,7 @@
   "CSV_PATH": "./data.csv", 
   // Path to the CSV file (must be in the project root)
 
-  "DELAY": 10,
+  "DELAY": 25,
   // Delay between individual messages (in seconds)
   "DEBUG": false
   // in DEBUG mode, bots will not send any real messages, and you wont need to register all the sessions before testing.
@@ -25,3 +25,4 @@
 ```docker
 docker build . -t wp_sender:v1
 docker run -it wp_sender:v1
+
