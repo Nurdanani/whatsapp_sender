@@ -51,8 +51,8 @@ function askDelay() {
         Infinity,
         "You can not set interval < 25s. Please, enter correct interval."
     );
-    cfg.update({ DELAY: Math.max(25, delay) });
-    if (cfg.DEBUG === true) cfg.update({ DELAY: Math.min(25, delay) });
+    if (cfg.DEBUG === true) cfg.update({ DELAY: Math.min(25, delay) })
+    else cfg.update({ DELAY: Math.max(25, delay)});
     return delay;
 }
 

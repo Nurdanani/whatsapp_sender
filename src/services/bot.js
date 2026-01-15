@@ -5,27 +5,12 @@ const { parse_existing_session_ids } = require('./misc.js');
 const { botEvents } = require('../core/event_system.js');
 const { cfg } = require('../core/config_manager.js');
 
-const puppeteer = require('puppeteer-extra');
 
-const UserAgent = require('user-agents')
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-stealth = StealthPlugin();
-
-stealth.enabledEvasions.delete('user-agent-override');
-puppeteer.use(stealth);
 
 class Bot {
 
     constructor(session_id) {
-
-        const randomAgent = new UserAgent({ deviceCategory: 'desktop'});
-        const randomAgentStr = randomAgent.toString();
-        console.log(randomAgentStr);
-        
-        const width = randomAgent.data.screenWidth;
-        const height = randomAgent.data.screenHeight;
-
-        
+ 
         this.ready = false;
         this.clientId = session_id;
         this.client = new Client({
@@ -34,17 +19,14 @@ class Bot {
                 clientId: session_id,
                 dataPath: './sessions/',
             }),
-            userAgent: randomAgentStr,
             puppeteer: {
-                headless: 'new',
-                defaultViewport: { width , height },
+                headless: 'false',
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
                     '--disable-blink-features=AutomationControlled',
-                    '--disable-features=IsolateOrigins,site-per-process',
                 ],
-            }
+            },
         });
         this.subscribeToEvents();
     }
@@ -90,8 +72,9 @@ class BotManager {
             logger.info('All bot slots are full');
             return;
         }
-        this.bots.push(botInstance);
         await botInstance.start();
+        this.bots.push(botInstance);
+        
     }
 
 
@@ -125,6 +108,7 @@ class BotManager {
             logger.error("Can not find bot by client id : " + clientId + "Error : " + error);
         }
     }
+
     *_bot_generator() {
         let i = 0;
         while (true) {
@@ -132,11 +116,14 @@ class BotManager {
             i++;
         }
     }
+    
     bot_iterator() {
-        // infinmite generator. returns bots instances, 1 by 1, looping after exhaustion of generator
+        // infinite generator. returns bots instances, 1 by 1, looping after exhaustion of generator
+    
         if (!this._gen) {
             this._gen = this._bot_generator();
         }
+
         return this._gen.next().value;
     }
 

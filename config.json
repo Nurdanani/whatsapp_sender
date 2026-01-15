@@ -1,8 +1,8 @@
 {
   "PHONE_KEYWORD": "Phone",
   "NAME_KEYWORD": "Name",
-  "MESSAGE": "{greet}, {name}",
+  "MESSAGE": "sddlfc.asd",
   "CSV_PATH": "./data.csv",
   "DELAY": 25,
-  "DEBUG": true
+  "DEBUG": false
 }

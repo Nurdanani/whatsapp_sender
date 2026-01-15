@@ -53,6 +53,7 @@ class MessageQueue {
             const phone = record[cfg.phone_keyword];
             const name = record?.[cfg.name_keyword];
             const content = buildFormattedMessage(cfg.message, name);
+            logger.info("CONTENT FOR UPCOMING MESSAGE : " + content )
             //creates new chunk, if previous is full.
             if (!this.chunk_queue[chunk_index]) {
                 this.chunk_queue[chunk_index] = [];
@@ -95,14 +96,11 @@ class MessageQueue {
             try {
                 logger.info("Sending message to : " + receiver_chat_id);
                 if (cfg.DEBUG === true) {
-                    this.sent_messages.push("[DEBUG] Message is not sent.");
+                    logger.info("[DEBUG] Message is not sent.");
+                    logger.info("CONTENT FOR UPCOMING MESSAGE : " + content )
                     continue;
                 }
-                const chat = await bot.client.getChatById(receiver_chat_id);
-                await chat.sendSeen();
-                await chat.sendStateTyping();
                 await bot.sendMessage(receiver_chat_id, content);
-                await chat.clearState();
                 this.sent_messages.push(chunk[i]);
             }
             catch (error) {
