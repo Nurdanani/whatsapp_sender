@@ -1,3 +1,5 @@
+# Bulk message sender for WhatsApp (garbage project, opened for open-source discipline practice class)
+
 ## src/core/config.json
 
 ```json
